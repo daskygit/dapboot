@@ -40,10 +40,10 @@
 void target_clock_setup(void) {
 
 //#define MODERN_LOCM3
-	/* Clock struct for "any" board with a 16Mhz crystal */
-	const struct rcc_clock_scale myclock_16m_hse = {
+
+	const struct rcc_clock_scale myclock_8m_hse = {
 		.pll_source = RCC_CFGR_PLLSRC_HSE_CLK,
-		.pll_mul = RCC_CFGR_PLLMUL_MUL6,
+		.pll_mul = RCC_CFGR_PLLMUL_MUL12,
 		.pll_div = RCC_CFGR_PLLDIV_DIV3,
 		.hpre = RCC_CFGR_HPRE_SYSCLK_NODIV,
 		.ppre1 = RCC_CFGR_PPRE1_HCLK_NODIV,
@@ -55,16 +55,16 @@ void target_clock_setup(void) {
 		.apb2_frequency = 32e6,
 	};
 
-	rcc_clock_setup_pll(&myclock_16m_hse);
+	rcc_clock_setup_pll(&myclock_8m_hse);
 }
 
 void target_gpio_setup(void)
 {
-	/* TODO: if you need buttons or gpios, turn them on here */
+	rcc_periph_clock_enable(RCC_GPIOC);
 #if HAVE_LED
 #endif
-#if HAVE_BUTTON
-#endif
+    gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, GPIO5);
+
 }
 
 const usbd_driver* target_usb_init(void)
@@ -96,7 +96,9 @@ bool target_get_force_bootloader(void)
 	backup_write(REG_BOOT, 0);
 
 #if HAVE_BUTTON
-#warning HAVE_BUTTON not implemented for L1
+    if (!gpio_get(GPIOC, GPIO5)) {
+        enter_bl = true;
+    }
 #endif
 	
 	return enter_bl;
